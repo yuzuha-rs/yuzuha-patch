@@ -16,7 +16,7 @@ mod interceptor;
 mod network;
 mod util;
 
-type PtrToStringAnsi = extern "fastcall" fn(chars: *const u8) -> u64;
+type PtrToStringAnsi = extern "C" fn(chars: *const u8) -> u64;
 static BASE: OnceLock<usize> = OnceLock::new();
 
 fn on_attach() {
@@ -26,9 +26,9 @@ fn on_attach() {
         let _ = Console::AllocConsole();
     }
 
-    println!("yuzuha-patch (2.1.3 BETA) is initializing");
+    println!("yuzuha-patch (2.2.1 BETA) is initializing");
     println!(
-        "to work with yixuan-rs: https://git.xeondev.com/yixuan-rs/yixuan-rs/src/branch/2.1_beta"
+        "to work with yixuan-rs: https://git.xeondev.com/yixuan-rs/yixuan-rs/src/branch/2.2_beta"
     );
 
     let base = loop {

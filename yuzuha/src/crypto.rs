@@ -76,13 +76,11 @@ fn initialize_rsa_key() {
     );
 
     let rsa_create = unsafe {
-        std::mem::transmute::<usize, extern "fastcall" fn() -> usize>(
-            BASE.get().unwrap() + RSA_CREATE,
-        )
+        std::mem::transmute::<usize, extern "C" fn() -> usize>(BASE.get().unwrap() + RSA_CREATE)
     };
 
     let rsa_from_xml_string = unsafe {
-        std::mem::transmute::<usize, extern "fastcall" fn(usize, usize) -> usize>(
+        std::mem::transmute::<usize, extern "C" fn(usize, usize) -> usize>(
             BASE.get().unwrap() + RSA_FROM_XML_STRING,
         )
     };
