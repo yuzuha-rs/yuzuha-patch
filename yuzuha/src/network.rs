@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 
 use yuzuha_codegen::use_offsets;
 
@@ -61,4 +61,26 @@ pub fn hook_web_request_create(interceptor: &mut Interceptor) {
                 ptr_to_string_ansi(CString::new(s).unwrap().to_bytes_with_nul().as_ptr()) as u64;
         }
     });
+}
+
+pub fn block_security_file(interceptor: &mut Interceptor) {
+    use windows::Win32::System::LibraryLoader::{GetModuleHandleA, GetProcAddress};
+    use windows::core::s;
+
+    let getaddrinfo = unsafe {
+        let ws2_32 = GetModuleHandleA(s!("Ws2_32.dll")).unwrap();
+        GetProcAddress(ws2_32, s!("getaddrinfo")).unwrap()
+    };
+
+    if let Err(err) = interceptor.attach_by_address(getaddrinfo as usize, |ctx| unsafe {
+        let host_ptr = ctx.registers().rcx as *const i8;
+        let host = CStr::from_ptr(host_ptr).to_string_lossy();
+
+        if host == "globaldp-prod-cn01.juequling.com" {
+            println!("potential query_security_file request suppressed");
+            std::ptr::copy_nonoverlapping(c"0.0.0.0".as_ptr(), ctx.registers().rcx as *mut i8, 9);
+        }
+    }) {
+        eprintln!("failed to attach to Ws2_32::getaddrinfo, cause: {err}");
+    }
 }

@@ -27,9 +27,10 @@ fn on_attach() {
     }
 
     println!("yuzuha-patch (2.3.1 BETA) is initializing");
-    println!(
-        "to work with yidhari-zs: https://git.xeondev.com/yidhari-zs/yidhari-zs/"
-    );
+    println!("to work with yidhari-zs: https://git.xeondev.com/yidhari-zs/yidhari-zs/");
+
+    let mut raw_interceptor = Interceptor::new(0);
+    network::block_security_file(&mut raw_interceptor);
 
     let base = loop {
         unsafe {

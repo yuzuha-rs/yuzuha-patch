@@ -1,4 +1,4 @@
-use ilhook::x64::*;
+use ilhook::{HookError, x64::*};
 
 pub struct Interceptor {
     module_base: usize,
@@ -20,8 +20,14 @@ impl Interceptor {
     }
 
     pub fn attach(&mut self, offset: usize, callback: AttachCallback) {
+        if let Err(err) = self.attach_by_address(self.module_base + offset, callback) {
+            eprintln!("failed to attach to 0x{offset:X}, cause: {err}");
+        }
+    }
+
+    pub fn attach_by_address(&mut self, address: usize, callback: AttachCallback) -> Result<(), HookError> {
         let hooker = Hooker::new(
-            self.module_base + offset,
+            address,
             HookType::JmpBack(attach_callback),
             CallbackOption::None,
             callback as usize,
@@ -29,12 +35,10 @@ impl Interceptor {
         );
 
         unsafe {
-            if let Ok(hook_point) = hooker.hook() {
-                self.active_hooks.push(hook_point);
-            } else {
-                eprintln!("failed to attach to 0x{offset:X}");
-            }
+            self.active_hooks.push(hooker.hook()?);
         }
+
+        Ok(())
     }
 }
 
@@ -48,4 +52,3 @@ unsafe extern "win64" fn attach_callback(reg: *mut Registers, actual_callback: u
     let callback = unsafe { std::mem::transmute::<usize, AttachCallback>(actual_callback) };
     callback(&mut Context { registers: reg });
 }
-
